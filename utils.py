@@ -1,6 +1,6 @@
 import os
 import config
-from pytube import Stream
+from pytube import Stream, StreamQuery
 
 def get_videos_folder():
     return os.getenv("SYSTEMDRIVE") + os.getenv("HOMEPATH") + "\Videos"
@@ -30,17 +30,24 @@ def get_videos_list():
     
     return res
 
-# Get real highest video quality cuz pytube is shit
-def get_highest_resolution(streams: Stream):
-    highestRes = 0
-    highestStream = None
+def get_extension_streams(streams: Stream, ext: str):
+    streamslist = []
     for item in streams:
-        try:
-            q = int(item.resolution[:-1])
-            if q > highestRes:
-                highestRes = q
-                highestStream = item
-        except:
-            pass
+        if ext in item.mime_type:
+            streamslist.append(item)
 
-    return highestStream
+    return streamslist
+
+def get_streams_list(streams: Stream):
+    streamslist = []
+    for item in streams:
+        streamslist.append([f"{item.resolution}{item.fps} | {item.codecs[0]}", item.itag])
+
+    #for item in streamslist:
+        #print(item)
+
+    return streamslist
+
+def remove_temp(path: str, filename: str):
+    os.remove(f"{path}/temp_{filename}.mp4")
+    os.remove(f"{path}/temp_{filename}.mp3")

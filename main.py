@@ -3,7 +3,6 @@ from pytube import YouTube
 from window import Ui_ADV
 from yt import *
 
-import streams
 import config
 from downloader import *
 from message_window import *
@@ -44,6 +43,7 @@ class Window(QtWidgets.QMainWindow):
 
     def download(self, data: tuple):
         yt, ytStreams, link, err = data
+        #print(data)
         if err:
             self.ui.progressBar.setMaximum(1)
             self.ui.pasteLinkButton.setEnabled(True)
@@ -66,6 +66,6 @@ app = QtWidgets.QApplication([])
 application = Window()
 application.show()
 sys.exit(app.exec())
-    
+
 
 #subprocess.run(f"ffmpeg -i {FILENAME} -vcodec libx264 -acodec aac -t 30 {file}.mp4")

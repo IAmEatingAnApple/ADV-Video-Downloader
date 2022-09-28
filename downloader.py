@@ -20,8 +20,16 @@ class DownloadDialog(QtWidgets.QMainWindow):
         self.ui.downloadButton.clicked.connect(self.start_download)
 
         self.yt, self.ytStreams, self.link, self.err = data
-        self.highestRes: Stream = utils.get_highest_resolution(self.ytStreams)
-        self.videosize = self.highestRes.filesize
+        #self.highestRes: Stream = utils.get_highest_resolution(self.ytStreams)
+        self.streams = utils.get_extension_streams(self.ytStreams, "mp4")
+        self.streamslist = utils.get_streams_list(self.streams)
+
+        for item in self.streamslist:
+            self.ui.resolutionBox.addItem(item[0], item[1])
+
+        #print("\n", self.streams)
+        #print(self.highestRes)
+        #self.videosize = self.highestRes.filesize
 
         title = self.yt.title
         if len(title) >= 50:
@@ -32,8 +40,7 @@ class DownloadDialog(QtWidgets.QMainWindow):
         
         self.ui.videoTitleLabel.setText("Title: " + title)
         self.ui.authorLabel.setText("Channel: " + self.yt.author)
-        self.ui.resolutionLabel.setText("Highest resolution: " + self.highestRes.resolution)
-        self.ui.fpsLabel.setText("FPS: " + str(self.highestRes.fps))
+        #self.ui.sizeLabel.setText("Size: " + str(self.highestRes.filesize_approx//1024//1024) + " MB")
 
         self.ui.lineEdit.setText(self.save_folder)
 
@@ -44,14 +51,27 @@ class DownloadDialog(QtWidgets.QMainWindow):
     def start_download(self):
         config.update_config("save_folder", self.ui.lineEdit.text())
 
-        self.downloadWorker = YT_DownloadVideo(self.highestRes, self.save_folder, self.link)
+        self.ui.downloadButton.setEnabled(False)
+        self.ui.browseButton.setEnabled(False)
+        
+        index = self.ui.resolutionBox.currentIndex()
+        itag = self.ui.resolutionBox.itemData(index)
+        print("itag", itag)
+
+        to_h264 = self.ui.convertBox.isChecked()
+
+        self.downloadWorker = YT_DownloadVideo(itag, self.save_folder, self.link, to_h264)
         self.downloadWorker.start()
         self.downloadWorker.finished.connect(self.download_ended)
         self.downloadWorker.percent.connect(self.set_progress)
+        self.downloadWorker.status.connect(self.set_status)
 
     def set_progress(self, percent):
         #print("jkshdbfkjdhzsxbf")
         self.ui.loadingBar.setValue(percent)
+
+    def set_status(self, status):
+        self.ui.browseButton.setText(status)
 
     def download_ended(self):
         self.downloadWorker.quit()

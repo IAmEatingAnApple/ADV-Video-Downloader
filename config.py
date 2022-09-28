@@ -16,9 +16,9 @@ def get_config():
     with open('config.yml', 'r') as f:
         return yaml.safe_load(f)
 
-def update_config(element, content):
+def update_config(key, content):
     parsed = get_config()
-    parsed[element] = content
+    parsed[key] = content
 
     with open('config.yml', "w") as f:
         yaml.dump(parsed, f)
