@@ -11,6 +11,8 @@ import math
 from yt import YT_DownloadVideo
 
 class DownloadDialog(QtWidgets.QMainWindow):
+    finished = pyqtSignal()
+
     def __init__(self, data: tuple):
         super(DownloadDialog, self).__init__()
         self.ui = Ui_Download()
@@ -21,7 +23,8 @@ class DownloadDialog(QtWidgets.QMainWindow):
 
         self.yt, self.ytStreams, self.link, self.err = data
         #self.highestRes: Stream = utils.get_highest_resolution(self.ytStreams)
-        self.streams = utils.get_extension_streams(self.ytStreams, "mp4")
+        #self.streams = utils.get_extension_streams(self.ytStreams, "mp4")
+        self.streams = self.ytStreams
         self.streamslist = utils.get_streams_list(self.streams)
 
         for item in self.streamslist:
@@ -53,10 +56,10 @@ class DownloadDialog(QtWidgets.QMainWindow):
 
         self.ui.downloadButton.setEnabled(False)
         self.ui.browseButton.setEnabled(False)
+        self.ui.convertBox.setEnabled(False)
         
         index = self.ui.resolutionBox.currentIndex()
         itag = self.ui.resolutionBox.itemData(index)
-        print("itag", itag)
 
         to_h264 = self.ui.convertBox.isChecked()
 
@@ -76,4 +79,5 @@ class DownloadDialog(QtWidgets.QMainWindow):
     def download_ended(self):
         self.downloadWorker.quit()
         create_info("Download ended!")
+        self.finished.emit()
         self.close()

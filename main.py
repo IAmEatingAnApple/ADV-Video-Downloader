@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from pytube import YouTube
 from window import Ui_ADV
+from widget import VideoWidget
 from yt import *
 
 import config
@@ -11,8 +12,9 @@ import os
 import sys
 import pyperclip
 
-os.system("pyuic5 design.ui -o window.py")
+os.system("pyuic5 design2.ui -o window.py")
 os.system("pyuic5 video.ui -o videoWindow.py")
+os.system("pyuic5 videoWidget.ui -o videoWidget.py")
 
 class Window(QtWidgets.QMainWindow):
     def __init__(self) -> None:
@@ -21,9 +23,24 @@ class Window(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.ui.pasteLinkButton.clicked.connect(self.paste_link)
+
+        self.update_history()
+
         config.setup_config()
 
-        self.ui.debugField.setText(utils.get_videos_list())
+    def update_history(self):
+        if utils.exists("history.json"):
+            history = utils.get_history()
+
+            while self.ui.widget_layout.count() > 0:
+                self.ui.widget_layout.takeAt(0).widget().deleteLater()
+
+            for item in history:
+                self.ui.widget_layout.addWidget(VideoWidget(
+                    video_title=item['video_title'],
+                    video_id=item['video_id'],
+                    video_path=item['video_path']
+                ))
 
     def paste_link(self):
         link = pyperclip.paste()
@@ -51,8 +68,8 @@ class Window(QtWidgets.QMainWindow):
 
         else:
             self.downloadDialog = DownloadDialog(data)
+            self.downloadDialog.finished.connect(lambda: self.update_history())
             self.downloadDialog.show()
-            pass
 
     def download_ended(self):
         self.streamsworker.quit()
@@ -60,12 +77,9 @@ class Window(QtWidgets.QMainWindow):
         self.ui.pasteLinkButton.setEnabled(True)
 
         self.ui.linkText.setText("")
-        self.ui.debugField.setText(utils.get_videos_list())
+        #self.ui.debugField.setText(utils.get_videos_list())
 
 app = QtWidgets.QApplication([])
 application = Window()
 application.show()
 sys.exit(app.exec())
-
-
-#subprocess.run(f"ffmpeg -i {FILENAME} -vcodec libx264 -acodec aac -t 30 {file}.mp4")

@@ -2,6 +2,7 @@ from os import link
 from pytube import YouTube, Stream
 from PyQt5.QtCore import QThread, pyqtSignal
 from convert import Converter
+from os import rename
 import re
 import config
 import utils
@@ -18,9 +19,11 @@ class YT_GetData(QThread):
             print("getting", self.link)
             yt = YouTube(self.link)
 
-            streams = yt.streams.filter(progressive=None, only_video=True)
-            #for i in yt.streams:
+            streams = yt.streams.filter(progressive=False, only_video=True)
+
+            #for i in streams:
                 #print(i)
+
             self.data.emit((yt, streams, self.link, False))
 
         except Exception as e:
@@ -45,9 +48,12 @@ class YT_DownloadVideo(QThread):
         yt = YouTube(self.link)
         yt.register_on_progress_callback(self.progress)
 
-        title = re.sub('[^A-Za-z0-9]+', '_', yt.title)
-
+        utils.download_thumbnail(yt.thumbnail_url)
+        
+        title = re.sub('[\\]|[/]|[:]|[*]|[?]|["]|[<]|[>]|[|]', '', yt.title)
+        
         video_stream = yt.streams.get_by_itag(self.itag)
+        print("size", str(utils.calculate_video_size(video_stream.bitrate//1000, float(yt.length/60))))
         #print(s)
 
         self.status.emit("Downloading")
@@ -59,13 +65,18 @@ class YT_DownloadVideo(QThread):
         self.status.emit("Audio")
         audio_stream.download(self.save_folder, filename=f"temp_{title}.mp3", skip_existing=False)
 
+        utils.add_to_history(
+                video_title=title,
+                video_id=utils.get_video_id(yt.thumbnail_url),
+                video_path=f"{self.save_folder}/{title}.mp4"
+        )
+
         self.status.emit("Converting")
 
         self.convertWorker = Converter(self.save_folder, title, self.to_h264)
+        self.convertWorker.percent.connect(self.send_percent)
         self.convertWorker.finished.connect(self.download_ended)
         self.convertWorker.start()
-
-        #self.download_ended()
 
     def send_percent(self, perc):
         self.percent.emit(perc)
