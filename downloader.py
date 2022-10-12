@@ -20,19 +20,20 @@ class DownloadDialog(QtWidgets.QMainWindow):
 
         self.ui.browseButton.clicked.connect(self.choose_folder)
         self.ui.downloadButton.clicked.connect(self.start_download)
+        self.ui.codecBox.currentTextChanged.connect(self.change_codec)
 
         self.yt, self.ytStreams, self.link, self.err = data
-        #self.highestRes: Stream = utils.get_highest_resolution(self.ytStreams)
-        #self.streams = utils.get_extension_streams(self.ytStreams, "mp4")
         self.streams = self.ytStreams
+
         self.streamslist = utils.get_streams_list(self.streams)
+        self.codeclist = utils.get_codecs_list(self.streams)
+        self.streamslist = utils.get_codec_streams(self.streams, self.codeclist[0])
 
         for item in self.streamslist:
             self.ui.resolutionBox.addItem(item[0], item[1])
 
-        #print("\n", self.streams)
-        #print(self.highestRes)
-        #self.videosize = self.highestRes.filesize
+        for item in self.codeclist:
+            self.ui.codecBox.addItem(item, item)
 
         title = self.yt.title
         if len(title) >= 50:
@@ -57,6 +58,8 @@ class DownloadDialog(QtWidgets.QMainWindow):
         self.ui.downloadButton.setEnabled(False)
         self.ui.browseButton.setEnabled(False)
         self.ui.convertBox.setEnabled(False)
+        self.ui.resolutionBox.setEnabled(False)
+        self.ui.codecBox.setEnabled(False)
         
         index = self.ui.resolutionBox.currentIndex()
         itag = self.ui.resolutionBox.itemData(index)
@@ -68,6 +71,15 @@ class DownloadDialog(QtWidgets.QMainWindow):
         self.downloadWorker.finished.connect(self.download_ended)
         self.downloadWorker.percent.connect(self.set_progress)
         self.downloadWorker.status.connect(self.set_status)
+
+    def change_codec(self, codec):
+        self.ui.resolutionBox.clear()
+
+        self.codeclist = utils.get_codecs_list(self.streams)
+        self.streamslist = utils.get_codec_streams(self.streams, self.ui.codecBox.currentText())
+
+        for item in self.streamslist:
+            self.ui.resolutionBox.addItem(item[0], item[1])
 
     def set_progress(self, percent):
         #print("jkshdbfkjdhzsxbf")

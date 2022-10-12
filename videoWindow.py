@@ -52,6 +52,9 @@ class Ui_Download(object):
         self.convertBox.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.convertBox.setChecked(False)
         self.convertBox.setObjectName("convertBox")
+        self.codecBox = QtWidgets.QComboBox(Download)
+        self.codecBox.setGeometry(QtCore.QRect(140, 80, 81, 22))
+        self.codecBox.setObjectName("codecBox")
 
         self.retranslateUi(Download)
         QtCore.QMetaObject.connectSlotsByName(Download)

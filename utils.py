@@ -1,8 +1,12 @@
 import os
+
+from matplotlib.streamplot import StreamplotSet
 import config
 import subprocess
 import requests
 import json
+
+from image_process import crop_thumbnail
 from pytube import Stream, StreamQuery
 from math import floor
 
@@ -48,11 +52,11 @@ def get_videos_list():
     
     return res
 
-def get_extension_streams(streams: Stream, ext: str):
+def get_codec_streams(streams: Stream, codec: str):
     streamslist = []
     for item in streams:
-        if ext in item.mime_type:
-            streamslist.append(item)
+        if codec.lower() in item.codecs[0]:
+            streamslist.append([f"{item.resolution}{item.fps} | {codec}", item.itag])
 
     return streamslist
 
@@ -75,6 +79,24 @@ def get_streams_list(streams: Stream):
 
     return streamslist
 
+def get_codecs_list(streams: Stream):
+    codeclist = []
+
+    for item in streams:
+        codec = ""
+
+        if "avc1" in item.codecs[0]:
+            codec = "AVC"
+        elif "av01" in item.codecs[0]:
+            codec = "AV01"
+        else:
+            codec = "VP9"
+
+        if codec not in codeclist:
+            codeclist.append(codec)
+
+    return codeclist
+
 def calculate_video_size(bitrate: int, length: float):
     print(bitrate)
     print(length)
@@ -95,6 +117,8 @@ def download_thumbnail(thumbnail_url: str):
     create_dir_if_not_exists("thumbs")
     with open(f"thumbs/{video_id}.jpg", "wb") as f:
         f.write(r.content)
+
+    crop_thumbnail(f"thumbs/{video_id}.jpg")
 
 def get_video_id(url: str):
     return url.split("/")[-2]

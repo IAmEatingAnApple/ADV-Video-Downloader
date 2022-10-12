@@ -12,11 +12,11 @@ class VideoWidget(QWidget):
         self.ui = Ui_Widget()
         self.ui.setupUi(self)
 
-        self.video_path = video_path
+        self.video_path = video_path.replace("/", "\\")
 
         self.ui.titleLabel.setText(video_title)
         self.ui.pushButton.clicked.connect(self.show_file)
         self.ui.thumbnailLabel.setPixmap(QPixmap(f"thumbs/{video_id}.jpg"))
 
     def show_file(self):
-        subprocess.Popen(f'explorer /select, "{self.video_path}"')
+        subprocess.Popen(f"explorer.exe /select, \"{self.video_path}\"")

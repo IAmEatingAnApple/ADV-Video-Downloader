@@ -12,9 +12,10 @@ import os
 import sys
 import pyperclip
 
-os.system("pyuic5 design2.ui -o window.py")
-os.system("pyuic5 video.ui -o videoWindow.py")
-os.system("pyuic5 videoWidget.ui -o videoWidget.py")
+if utils.exists("design2.ui"):
+    os.system("pyuic5 design2.ui -o window.py")
+    os.system("pyuic5 video.ui -o videoWindow.py")
+    os.system("pyuic5 videoWidget.ui -o videoWidget.py")
 
 class Window(QtWidgets.QMainWindow):
     def __init__(self) -> None:
